@@ -229,7 +229,7 @@ let bin_rcce_lu = [ "/sbin/" ++ f | f <- [
                            "xeon_phi_mgr",
                            "examples/xmpl-hello",
                            "info_flow/recv_test",
-                           "info_flow/recv_test"
+                           "info_flow/send_test"
                            ]] ++ modules_common
 
     -- the following are broken in the newidc system

@@ -16,6 +16,17 @@
 
 #include <barrelfish/barrelfish.h>
 #include <barrelfish/nameservice_client.h>
+#include <barrelfish/dispatch.h>
+#include <barrelfish_kpi/init.h>
+#include <barrelfish/debug.h>
+//#include <barrelfish/sys_debug.h>
+//#include <barrelfish/syscall_arch.h>
+//#include <barrelfish_kpi/sys_debug.h>
+//#include <bench/bench.h>
+//#include <if/bench_defs.h>
+//#include <barrelfish/sys_debug.h>
+//#include <arch/x86/barrelfish/perfmon.h>
+//#include <arch/x86/barrelfish_kpi/perfmon_amd.h>
 
 #include <if/xmplmsg_defs.h>
 
@@ -26,7 +37,11 @@ const char *service_name = "xmpl-msg_service";
 
 static void send_string_cb(void *a)
 {
+    errval_t err;
     // send succesful, nothing to do
+    struct xmplmsg_binding *b = (struct xmplmsg_binding*)a;
+    printf("send 3#\n");
+    err = xmplmsg_msg_string__tx(b, NOP_CONT, "Fuck World Again!");
 }
 
 
@@ -37,7 +52,7 @@ static void send_string_ready(void *a)
     struct xmplmsg_binding *b = (struct xmplmsg_binding*)a;
     struct event_closure txcont = MKCONT(send_string_cb, b);
 
-    err = xmplmsg_msg_string__tx(b, txcont, "Hello World");
+    err = xmplmsg_msg_string__tx(b, txcont, "Fuck World");
 
     if (err_is_fail(err)) {
       DEBUG_ERR(err, "error sending msg_string message\n");
@@ -52,6 +67,7 @@ static void send_ints_cb(void *a)
     struct xmplmsg_binding *b = (struct xmplmsg_binding*)a;
     struct event_closure txcont = MKCONT(send_string_cb, b);
 
+    printf("send 2#\n");
     err = xmplmsg_msg_string__tx(b, txcont, "Hello World");
 
     if (err_is_fail(err)) {
@@ -91,7 +107,17 @@ static void bind_cb(void *st, errval_t err, struct xmplmsg_binding *b)
 
     struct event_closure txcont = MKCONT(send_ints_cb, b);
 
-    err = xmplmsg_msg_ints__tx(b, txcont, 0x1, 0x10);
+    printf("send 1#\n");
+    cycles_t cur_cycle = 0;
+    //sys_debug_hardware_timer_read((uintptr_t *)&cur_cycle);
+    //cur_cycle = bench_tsc();
+    cur_cycle = rdtsc();
+    //struct sysret sr = syscall2(SYSCALL_DEBUG, DEBUG_HARDWARE_TIMER_READ);
+    //cur_cycle = sr.value;
+    printf("sys time %ld", cur_cycle);
+
+    //err = xmplmsg_msg_ints__tx(b, txcont, 0x1, 0x10);
+    err = xmplmsg_msg_ints__tx(b, txcont, (int)(cur_cycle>>32), (int)cur_cycle);
 
     if (err_is_fail(err)) {
       DEBUG_ERR(err, "error sending msg_ints message\n");
@@ -128,74 +154,14 @@ static void start_client(void)
     }
 }
 
-/* --------------------- Server ------------------------------ */
-
-static void rx_msg_ints(struct xmplmsg_binding *b, int ia, int ib)
-{
-    printf("server: received msg_ints:\n\tia:%d, ib:%d\n", ia, ib);
-}
-
-
-static void rx_msg_string(struct xmplmsg_binding *b, const char *str)
-{
-    printf("server: received msg_string:\n\t%s\n", str);
-    // no need to free the string
-}
-
-static struct xmplmsg_rx_vtbl rx_vtbl = {
-    .msg_ints = rx_msg_ints,
-    .msg_string = rx_msg_string,
-};
-
-static errval_t connect_cb(void *st, struct xmplmsg_binding *b) 
-{    
-    b->rx_vtbl = rx_vtbl;
-
-    return SYS_ERR_OK;
-}
-
-
-static void export_cb(void *st, errval_t err, iref_t iref)
-{
-    if (err_is_fail(err)) {
-        USER_PANIC_ERR(err, "export failed");
-    }
-
-    err = nameservice_register(service_name, iref);
-    if (err_is_fail(err)) {
-        USER_PANIC_ERR(err, "nameservice_register failed");
-    }
-}
-
-static void start_server(void)
-{
-    errval_t err;
-
-    err = xmplmsg_export(NULL /* state pointer for connect/export callbacks */,
-			  export_cb, connect_cb,
-			  get_default_waitset(),
-			  IDC_EXPORT_FLAGS_DEFAULT);
-    if (err_is_fail(err)) {
-        USER_PANIC_ERR(err, "export failed");
-    }
-}
-
-
-
 /* --------------------- Main ------------------------------ */
 
 int main(int argc, char *argv[]) 
 {
     errval_t err;
 
-    if ((argc >= 2) && (strcmp(argv[1], "client") == 0)) {
-        start_client();
-    } else if ((argc >= 2) && (strcmp(argv[1], "server") == 0)) {
-        start_server();
-    } else {
-        printf("usage: %s client|server\n", argv[0]);
-        return EXIT_FAILURE;
-    }
+    debug_my_cspace();
+    start_client();
 
     struct waitset *ws = get_default_waitset();
     while (1) {

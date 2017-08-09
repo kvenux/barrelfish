@@ -12,8 +12,8 @@ timeout 0
 
 title	Barrelfish
 root	(nd)
-kernel	/x86_64/sbin/elver loglevel=3
-module	/x86_64/sbin/cpu loglevel=3
+kernel	/x86_64/sbin/elver loglevel=4
+module	/x86_64/sbin/cpu loglevel=4
 module	/x86_64/sbin/init
 
 # Domains spawned by init
@@ -23,7 +23,6 @@ module	/x86_64/sbin/monitor
 # Special boot time domains spawned by monitor
 module  /x86_64/sbin/ramfsd boot
 module  /x86_64/sbin/skb boot
-modulenounzip /eclipseclp_ramfs.cpio.gz nospawn
 modulenounzip /skb_ramfs.cpio.gz nospawn
 module  /x86_64/sbin/kaluga boot
 module  /x86_64/sbin/acpi boot
@@ -32,23 +31,6 @@ module  /x86_64/sbin/spawnd boot
 module  /x86_64/sbin/startd boot
 module /x86_64/sbin/routing_setup boot
 
-# Drivers
-module /x86_64/sbin/pci auto
-module /x86_64/sbin/corectrl auto
-module /x86_64/sbin/ahcid auto
-module	/x86_64/sbin/serial_pc16550d auto
-
-## For networking
-module /x86_64/sbin/rtl8029 auto
-module /x86_64/sbin/e1000n auto
-
-## Other services needed for networking
-module /x86_64/sbin/NGD_mng auto
-module /x86_64/sbin/netd auto
-
 # General user domains
-module  /x86_64/sbin/fish nospawn
-module	/x86_64/sbin/angler serial0.terminal xterm
-module  /x86_64/sbin/examples/xmpl-hello
-module  /x86_64/sbin/info_flow/send_test core=0
-module  /x86_64/sbin/info_flow/recv_test core=1
+module /x86_64/sbin/examples/xmpl-msg core=0 server
+module /x86_64/sbin/examples/xmpl-msg core=1 client

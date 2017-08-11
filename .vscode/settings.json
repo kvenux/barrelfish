@@ -1,7 +1,3 @@
 {
-    "files.associations": {
-        "regex": "c",
-        "sstream": "c",
-        "strstream": "c"
-    }
+    "files.associations": {"regex":"c","sstream":"c","strstream":"c"}
 }

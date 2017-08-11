@@ -40,7 +40,7 @@ static void send_string_cb(void *a)
     errval_t err;
     // send succesful, nothing to do
     struct xmplmsg_binding *b = (struct xmplmsg_binding*)a;
-    printf("send 3#\n");
+    debug_printf("send 3#\n");
     err = xmplmsg_msg_string__tx(b, NOP_CONT, "Fuck World Again!");
 }
 
@@ -67,7 +67,7 @@ static void send_ints_cb(void *a)
     struct xmplmsg_binding *b = (struct xmplmsg_binding*)a;
     struct event_closure txcont = MKCONT(send_string_cb, b);
 
-    printf("send 2#\n");
+    debug_printf("send 2#\n");
     err = xmplmsg_msg_string__tx(b, txcont, "Hello World");
 
     if (err_is_fail(err)) {
@@ -107,14 +107,14 @@ static void bind_cb(void *st, errval_t err, struct xmplmsg_binding *b)
 
     struct event_closure txcont = MKCONT(send_ints_cb, b);
 
-    printf("send 1#\n");
+    debug_printf("send 1#\n");
     cycles_t cur_cycle = 0;
     //sys_debug_hardware_timer_read((uintptr_t *)&cur_cycle);
     //cur_cycle = bench_tsc();
     cur_cycle = rdtsc();
     //struct sysret sr = syscall2(SYSCALL_DEBUG, DEBUG_HARDWARE_TIMER_READ);
     //cur_cycle = sr.value;
-    printf("sys time %ld", cur_cycle);
+    debug_printf("sys time %ld", cur_cycle);
 
     //err = xmplmsg_msg_ints__tx(b, txcont, 0x1, 0x10);
     err = xmplmsg_msg_ints__tx(b, txcont, (int)(cur_cycle>>32), (int)cur_cycle);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 {
     errval_t err;
 
-    debug_my_cspace();
+    // debug_my_cspace();
     start_client();
 
     struct waitset *ws = get_default_waitset();

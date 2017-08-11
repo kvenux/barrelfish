@@ -98,6 +98,9 @@ static struct sysret handle_retype_common(struct capability *root,
     uint64_t dest_cnode_level = args[7];
 
     TRACE(KERNEL, SC_RETYPE, 0);
+    if(type == ObjType_EndPoint){
+        printf("retype_common endpoint\n");
+    }
     struct sysret sr = sys_retype(root, source_croot, source_cptr, offset, type,
                                   objsize, objcount, dest_cspace_cptr,
                                   dest_cnode_cptr, dest_cnode_level,
@@ -123,6 +126,9 @@ static struct sysret handle_create(struct capability *root,
     cslot_t dest_slot         = args[4];
 
     TRACE(KERNEL, SC_CREATE, 0);
+    if(type == ObjType_EndPoint){
+        printf("handle_create endpoint\n");
+    }
     struct sysret sr = sys_create(root, type, objsize, dest_cnode_cptr,
                                   dest_level, dest_slot);
     TRACE(KERNEL, SC_CREATE, 1);
@@ -1356,6 +1362,13 @@ struct sysret sys_syscall(uint64_t syscall, uint64_t arg0, uint64_t arg1,
             bool yield = flags & LMP_FLAG_YIELD;
             // is the cap (if present) to be deleted on send?
             bool give_away = flags & LMP_FLAG_GIVEAWAY;
+
+            struct dispatcher_shared_generic *from_disp =
+                        get_dispatcher_shared_generic(dcb_current->disp);
+            struct dispatcher_shared_generic *to_disp =
+                        get_dispatcher_shared_generic(listener->disp);
+            // printf("LMP from %s to %s\n", from_disp->name, to_disp->name);
+            // printf("rights: %d\n", to->rights);
 
             // try to deliver message
             retval.error = lmp_deliver(to, dcb_current, args, length_words,

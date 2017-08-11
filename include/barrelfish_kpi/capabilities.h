@@ -37,7 +37,8 @@
 #define CAPRIGHTS_EXECUTE       (1 << 2)
 #define CAPRIGHTS_GRANT         (1 << 3)
 #define CAPRIGHTS_IDENTIFY      (1 << 4)
-#define CAPRIGHTS_NUM           5
+#define CAPRIGHTS_SEND          (1 << 5)
+#define CAPRIGHTS_NUM           6
 
 #define CAPRIGHTS_ALLRIGHTS     ((1 << CAPRIGHTS_NUM) - 1)
 #define CAPRIGHTS_READ_WRITE    (CAPRIGHTS_READ | CAPRIGHTS_WRITE)

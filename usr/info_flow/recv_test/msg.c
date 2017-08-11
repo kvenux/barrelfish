@@ -28,18 +28,18 @@ const char *service_name = "xmpl-msg_service";
 
 static void rx_msg_ints(struct xmplmsg_binding *b, int ia, int ib)
 {
-    printf("server: received msg_ints:\n\tia:%d, ib:%d\n", ia, ib);
+    debug_printf("server: received msg_ints:\n\tia:%d, ib:%d\n", ia, ib);
     long c = (long)ia << 32 | ib;
-    printf("server: received msg_long: %ld\n", c);
+    debug_printf("server: received msg_long: %ld\n", c);
     cycles_t cur_cycle = 0;
     cur_cycle = rdtsc();
-    printf("server: time comsuming: %ld\n", cur_cycle-c);
+    debug_printf("server: time comsuming: %ld\n", cur_cycle-c);
 }
 
 
 static void rx_msg_string(struct xmplmsg_binding *b, const char *str)
 {
-    printf("server: received msg_string:\n\t%s\n", str);
+    debug_printf("server: received msg_string:\n\t%s\n", str);
     // free(str);
 }
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 {
     errval_t err;
 
-    debug_my_cspace();
+    // debug_my_cspace();
     start_server();
 
     struct waitset *ws = get_default_waitset();

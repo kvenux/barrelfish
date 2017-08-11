@@ -1669,6 +1669,9 @@ errval_t caps_retype(enum objtype type, gensize_t objsize, size_t count,
         assert(src_cap->type == ObjType_Dispatcher);
         assert(count == 1);
         struct capability *dest_cap = &dest_cte->cap;
+        struct dispatcher_shared_generic *to_disp =
+                        get_dispatcher_shared_generic(src_cap->u.dispatcher.dcb);
+        printf("disp cap retyped to endpoint cap : %s\n", to_disp->name);
         dest_cap->u.endpoint.listener = src_cap->u.dispatcher.dcb;
     }
 

@@ -1,3 +1,33 @@
 {
-    "files.associations": {"regex":"c","sstream":"c","strstream":"c"}
+    "files.associations": {
+        "regex": "c",
+        "sstream": "c",
+        "strstream": "c",
+        "__functional_03": "c",
+        "__functional_base": "c",
+        "__functional_base_03": "c",
+        "__tuple": "c",
+        "chrono": "c",
+        "functional": "c",
+        "limits": "c",
+        "memory": "c",
+        "random": "c",
+        "ratio": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "__refstring": "c",
+        "*.ipp": "c",
+        "barrelfish.h": "c",
+        "typeinfo": "c",
+        "*.c0": "c",
+        "__split_buffer": "c",
+        "deque": "c",
+        "list": "c",
+        "map": "c",
+        "queue": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "vector": "c"
+    }
 }

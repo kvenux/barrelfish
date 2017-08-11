@@ -27,7 +27,7 @@
 #include <barrelfish_kpi/dispatcher_shared_target.h>
 #include <barrelfish_kpi/cpu_arch.h>
 #include <barrelfish_kpi/registers_arch.h>
-
+#include <stdio.h>
 #include <bitmacros.h>
 
 #if defined(__x86_64__) || defined(__i386__)
@@ -253,7 +253,7 @@ static errval_t lmp_transfer_cap(struct capability *ep, struct dcb *send,
                           &recv_cspace_cap, CAPRIGHTS_READ_WRITE);
     if (err_is_fail(err) || recv_cspace_cap->type != ObjType_L1CNode) {
         return SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
-    }
+    }   
     // Check index into L1 cnode
     capaddr_t l1index = recv_ep->recv_cptr >> L2_CNODE_BITS;
     if (l1index >= cnode_get_slots(recv_cspace_cap)) {
@@ -284,6 +284,23 @@ static errval_t lmp_transfer_cap(struct capability *ep, struct dcb *send,
     if (recv_cte->cap.type != ObjType_Null) {
         debug(SUBSYS_DISPATCH, "%s: dest slot occupied\n", __FUNCTION__);
         return SYS_ERR_LMP_CAPTRANSFER_DST_SLOT_OCCUPIED;
+    }
+
+    if(send_cte->cap.type == ObjType_EndPoint){
+        // sending disp
+        struct dispatcher_shared_generic *send_disp =
+                            get_dispatcher_shared_generic(send->disp);
+        // to disp
+        struct dcb *listener = ep->u.endpoint.listener;
+        struct dispatcher_shared_generic *to_disp =
+                            get_dispatcher_shared_generic(listener->disp);
+        printf("LMP_dispatch transfer cap %s to %s\n", send_disp->name, to_disp->name);
+                            
+        // sending ep
+        // struct dcb *sending_ep_listener = recv_cte->cap.u.endpoint.listener;
+        // struct dispatcher_shared_generic *ep_pointing_disp =
+        //                     get_dispatcher_shared_generic(sending_ep_listener->disp);
+        // printf("LMP_dispatch transfer cap %s to %s with ep to %s\n", send_disp->name, to_disp->name, ep_pointing_disp->name);
     }
 
     //caps_trace(__func__, __LINE__, send_cte, "transferring");

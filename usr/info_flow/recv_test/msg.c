@@ -72,6 +72,7 @@ static void start_server(void)
 {
     errval_t err;
 
+    debug_printf("server before exporting\n");
     err = xmplmsg_export(NULL /* state pointer for connect/export callbacks */,
 			  export_cb, connect_cb,
 			  get_default_waitset(),

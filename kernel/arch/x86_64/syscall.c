@@ -1373,6 +1373,9 @@ struct sysret sys_syscall(uint64_t syscall, uint64_t arg0, uint64_t arg1,
             // try to deliver message
             retval.error = lmp_deliver(to, dcb_current, args, length_words,
                                        arg1, send_level, give_away);
+            // if(arg1 != CPTR_NULL){
+            //     printf("LMP_CAP from %s to %s\n", from_disp->name, to_disp->name);
+            // }
 
             /* Switch to receiver upon successful delivery with sync flag,
              * or (some cases of) unsuccessful delivery with yield flag */

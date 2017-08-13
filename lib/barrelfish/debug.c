@@ -439,7 +439,7 @@ static void walk_cspace_l2(struct capref l2cnode){
         size_t prpos = 0;
 
         prpos += snprintf(buf, sizeof(buf),
-                          "slot %" PRIuCADDR " caddr 0x%" PRIxCADDR " is a ",
+                          "slot %" PRIuCADDR " caddr 0x%" PRIxCADDR " is a fuck ",
                           pos.slot, get_cap_addr(pos));
         assert(prpos < sizeof(buf));
         prpos += debug_print_cap(&buf[prpos], sizeof(buf) - prpos, &cap);

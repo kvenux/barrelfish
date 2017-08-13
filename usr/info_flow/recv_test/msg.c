@@ -91,6 +91,12 @@ int main(int argc, char *argv[])
     errval_t err;
 
     // debug_my_cspace();
+
+    // err = cap_retype(cap_selfep, cap_dispatcher, 0, ObjType_EndPoint, 0, 1);
+    // if (err_is_fail(err)) {
+    //     DEBUG_ERR(err, "Failed to create our endpoint to self");
+    //     abort();
+    // }
     start_server();
 
     struct waitset *ws = get_default_waitset();

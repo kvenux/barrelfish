@@ -28,6 +28,13 @@
         "queue": "c",
         "string": "c",
         "unordered_map": "c",
-        "vector": "c"
+        "vector": "c",
+        "iterator": "c",
+        "valarray": "c",
+        "sys_debug.h": "c",
+        "dispatcher_shared_target.h": "c",
+        "ipi_notify.h": "c",
+        "dispatch.h": "c",
+        "capabilities.h": "c"
     }
 }

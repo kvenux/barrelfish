@@ -39,6 +39,10 @@
 #include <barrelfish_kpi/platform.h>
 #include <trace/trace.h>
 #include <useraccess.h>
+
+#include <mdb/mdb.h>
+#include <mdb/mdb_tree.h>
+
 #ifndef __k1om__
 #include <vmkit.h>
 #include <dev/amd_vmcb_dev.h>

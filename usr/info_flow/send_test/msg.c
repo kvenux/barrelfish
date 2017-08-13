@@ -162,6 +162,9 @@ int main(int argc, char *argv[])
 
     // debug_my_cspace();
     start_client();
+    dispatcher_handle_t handle = curdispatcher();
+    struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
+    err = invoke_dispatcher_dump_capabilities(dcb);
 
     struct waitset *ws = get_default_waitset();
     while (1) {

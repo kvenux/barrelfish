@@ -30,6 +30,7 @@
 #include <mdb/mdb_tree.h>
 #include <trace/trace.h>
 #include <trace_definitions/trace_defs.h>
+#include <barrelfish_kpi/dispatcher_shared_target.h>
 #include <wakeup.h>
 #include <bitmacros.h>
 
@@ -58,6 +59,8 @@ struct capability monitor_ep;
 STATIC_ASSERT(48 == ObjType_Num, "Knowledge of all cap types");
 int sprint_cap(char *buf, size_t len, struct capability *cap)
 {
+    struct dcb *listener;
+    struct dispatcher_shared_generic *to_disp;
     switch (cap->type) {
     case ObjType_PhysAddr:
         return snprintf(buf, len,
@@ -260,6 +263,9 @@ int sprint_cap(char *buf, size_t len, struct capability *cap)
                 cap->u.irqdest.vector, cap->u.irqdest.cpu);
 
     case ObjType_EndPoint:
+        listener = cap->u.endpoint.listener;
+        to_disp =                         get_dispatcher_shared_generic(listener->disp);
+        printf("LMP from %s\n", to_disp->name);
         return snprintf(buf, len, "EndPoint cap (disp %p offset 0x%" PRIxLVADDR ")",
                         cap->u.endpoint.listener, cap->u.endpoint.epoffset);
 

@@ -164,7 +164,12 @@ int main(int argc, char *argv[])
     start_client();
     dispatcher_handle_t handle = curdispatcher();
     struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
-    err = invoke_dispatcher_dump_capabilities(dcb);
+    int ep_num = cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum).value;
+    debug_printf("Endpoint num: %d\n", ep_num);
+    int ep_cap = cap_invoke2(dcb, DispatcherCmd_GetAllEndpoints, 3).value;
+    debug_printf("Endpoint cap: %d\n", ep_cap);
+    // cap_invoke2(cap_kernel, KernelCmd_Add_kcb, kcb_base).error;
+    // err = invoke_dispatcher_dump_capabilities(dcb);
 
     struct waitset *ws = get_default_waitset();
     while (1) {

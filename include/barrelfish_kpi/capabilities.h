@@ -437,6 +437,9 @@ enum dispatcher_cmd {
     DispatcherCmd_Vmwrite,          ///< Execute vmwrite on the current and active VMCS
     DispatcherCmd_Vmptrld,          ///< Make VMCS clear and inactive
     DispatcherCmd_Vmclear,          ///< Make VMCS current and active 
+
+    DispatcherCmd_GetEndpointsNum,  ///< get the number of endpoints
+    DispatcherCmd_GetAllEndpoints,  ///< get all the ep caps
 };
 
 /**

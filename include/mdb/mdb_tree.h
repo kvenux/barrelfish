@@ -142,6 +142,7 @@ bool mdb_reachable(struct cte *cte);
  * @param data User provided data pointer.
  */
 typedef errval_t (*mdb_tree_traversal_fn)(struct cte *cte, void *data);
+typedef struct sysret (*mdb_tree_traversal_fn_ep)(struct cte *cte, void *data);
 
 enum mdb_tree_traversal_order {
     MDB_TRAVERSAL_ORDER_ASCENDING, ///< Traverse the tree in ascending order
@@ -156,7 +157,7 @@ enum mdb_tree_traversal_order {
  * @parm data User-provided data pointer.
  */
 errval_t mdb_traverse(enum mdb_tree_traversal_order order, mdb_tree_traversal_fn cb, void *data);
-
+struct sysret mdb_traverse_ep(enum mdb_tree_traversal_order order, mdb_tree_traversal_fn_ep cb, void *data);
 /**
  * Traverse an mdb sub tree using some order with a call-back function and
  * user-provided data.
@@ -166,6 +167,7 @@ errval_t mdb_traverse(enum mdb_tree_traversal_order order, mdb_tree_traversal_fn
  * @parm data User-provided data pointer.
  */
 errval_t mdb_traverse_subtree(struct cte *cte, enum mdb_tree_traversal_order order, mdb_tree_traversal_fn cb, void *data);
+struct sysret mdb_traverse_subtree_ep(struct cte *cte, enum mdb_tree_traversal_order order, mdb_tree_traversal_fn_ep cb, void *data);
 
 __END_DECLS
 

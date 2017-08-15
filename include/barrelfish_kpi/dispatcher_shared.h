@@ -54,6 +54,8 @@ struct dispatcher_shared_generic {
     systime_t   wakeup;                         ///< System time at which to wake dispatcher from sleep (R/O by kernel, on yield)
 
     char        name[DISP_NAME_LEN];            ///< Name of domain, for debugging purposes
+    int         ep_cap_list[128];
+    int         ep_cap_cnt;
     uint32_t    fpu_used;                       ///< Was FPU used while disabled?
     uint32_t    fpu_trap;                       ///< State of FPU trap
 

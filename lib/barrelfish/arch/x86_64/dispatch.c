@@ -43,6 +43,7 @@ void disp_arch_init(dispatcher_handle_t handle)
     disp->d.dispatcher_pagefault = (lvaddr_t)pagefault_entry;
     disp->d.dispatcher_pagefault_disabled = (lvaddr_t)disabled_pagefault_entry;
     disp->d.dispatcher_trap = (lvaddr_t)trap_entry;
+    disp->d.ep_cap_cnt = 0;
 
     disp->crit_pc_low = (lvaddr_t)disp_resume;
     disp->crit_pc_high = (lvaddr_t)disp_resume_end;

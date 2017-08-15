@@ -2,6 +2,7 @@
 #include <mdb/mdb.h>
 #include <cap_predicates.h>
 #include <barrelfish_kpi/capabilities.h>
+#include <barrelfish_kpi/syscalls.h>
 #include <capabilities.h>
 #include <assert.h>
 #include <stdio.h>
@@ -1342,3 +1343,61 @@ mdb_traverse_subtree(struct cte *cte, enum mdb_tree_traversal_order order,
     }
     return SYS_ERR_OK;
 }
+
+struct sysret
+mdb_traverse_ep(enum mdb_tree_traversal_order order, mdb_tree_traversal_fn_ep cb, void *data)
+{
+    return mdb_traverse_subtree_ep(mdb_root, order, cb, data);
+}
+
+struct sysret
+mdb_traverse_subtree_ep(struct cte *cte, enum mdb_tree_traversal_order order,
+        mdb_tree_traversal_fn_ep cb, void *data)
+{
+    struct mdbnode *node = N(cte);
+    assert(node);
+
+    struct cte *first, *second;
+    if (order == MDB_TRAVERSAL_ORDER_ASCENDING) {
+        first = node->left;
+        second = node->right;
+    } else {
+        first = node->right;
+        second = node->left;
+    }
+
+    struct sysret sr_first, sr_middle, sr_second;
+    int first_value = 0;
+    int mid_value = 0;
+    int second_value = 0;
+
+    if (first) {
+        sr_first = mdb_traverse_subtree_ep(first, order, cb, data);
+        if (err_is_fail(sr_first.error)) {
+            return sr_first;
+        }
+        first_value = sr_first.value;
+    }
+
+    sr_middle = cb(cte, data);
+    if(sr_middle.value == 1)
+        mid_value = sr_middle.value;
+
+    if (err_is_fail(sr_middle.error)) {
+        return sr_middle;
+    }
+
+    if (second) {
+        sr_second = mdb_traverse_subtree_ep(second, order, cb, data);
+        if (err_is_fail(sr_second.error)) {
+            return sr_second;
+        }
+        second_value = sr_second.value;
+    }
+    // printf("first mid second: %d, %d, %d", sr_first.value, sr_middle.value, sr_second.value);
+    return (struct sysret) {
+        .error = SYS_ERR_OK,
+        .value = first_value + mid_value + second_value,
+    };
+}
+

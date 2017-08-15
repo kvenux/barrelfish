@@ -264,10 +264,10 @@ int sprint_cap(char *buf, size_t len, struct capability *cap)
 
     case ObjType_EndPoint:
         listener = cap->u.endpoint.listener;
-        to_disp =                         get_dispatcher_shared_generic(listener->disp);
-        printf("LMP from %s\n", to_disp->name);
-        return snprintf(buf, len, "EndPoint cap (disp %p offset 0x%" PRIxLVADDR ")",
-                        cap->u.endpoint.listener, cap->u.endpoint.epoffset);
+        to_disp = get_dispatcher_shared_generic(listener->disp);
+        // printf("ep to %s\n", to_disp->name);
+        return snprintf(buf, len, "EndPoint cap to %s (disp %p offset 0x%" PRIxLVADDR ")",
+                        to_disp->name, cap->u.endpoint.listener, cap->u.endpoint.epoffset);
 
     case ObjType_IO:
         return snprintf(buf, len, "IO cap (0x%hx-0x%hx)",

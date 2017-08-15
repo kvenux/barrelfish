@@ -972,6 +972,49 @@ static struct sysret dispatcher_dump_capabilities(struct capability *cap,
     return SYSRET(err);
 }
 
+static struct sysret dispatcher_get_all_ep(struct capability *cap,
+                                             int cmd, uintptr_t *args)
+{
+    assert(cap->type == ObjType_Dispatcher);
+
+    int cap_number = args[0];
+
+    printf("dispatcher_get_all_ep num at %d\n", cap_number);
+    
+    struct dcb *dispatcher = cap->u.dispatcher.dcb;
+    struct dispatcher_shared_generic *cur_dis_generic =
+                        get_dispatcher_shared_generic(dispatcher->disp);
+    struct sysret sr;
+    // sr.value = cap;
+    sr.value = cur_dis_generic->ep_cap_list[cap_number];
+
+    sr.error = SYS_ERR_OK;
+
+    return sr;
+}
+
+static struct sysret dispatcher_get_ep_num(struct capability *cap,
+                                             int cmd, uintptr_t *args)
+{
+    assert(cap->type == ObjType_Dispatcher);
+
+    printf("disp get ep num\n");
+
+    struct dcb *dispatcher = cap->u.dispatcher.dcb;
+    struct dispatcher_shared_generic *cur_dis_generic =
+                        get_dispatcher_shared_generic(dispatcher->disp);
+    cur_dis_generic->ep_cap_cnt = 0;
+
+    struct sysret sr;
+
+    sr = debug_print_cababilities_ep(dispatcher);
+
+    printf("disp get ep num: %d\n", sr.value);
+    return sr;
+
+    // return SYSRET(SYS_ERR_OK);
+}
+
 /*
  * \brief Activate performance monitoring
  *
@@ -1143,6 +1186,8 @@ static invocation_handler_t invocations[ObjType_Num][CAP_MAX_CMD] = {
 #endif
         [DispatcherCmd_DumpPTables]  = dispatcher_dump_ptables,
         [DispatcherCmd_DumpCapabilities] = dispatcher_dump_capabilities,
+        [DispatcherCmd_GetAllEndpoints] = dispatcher_get_all_ep,
+        [DispatcherCmd_GetEndpointsNum] = dispatcher_get_ep_num,
 	[DispatcherCmd_Vmread] = handle_vmread,
 	[DispatcherCmd_Vmwrite] = handle_vmwrite,
 	[DispatcherCmd_Vmptrld] = handle_vmptrld,

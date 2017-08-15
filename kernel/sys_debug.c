@@ -129,3 +129,79 @@ errval_t
 debug_print_cababilities(struct dcb *dispatcher) {
     return mdb_traverse(MDB_TRAVERSAL_ORDER_ASCENDING, sys_debug_print_capabilities_cb, dispatcher);
 }
+
+
+static struct sysret
+sys_debug_print_capabilities_cb_ep(struct cte *cte, void *data) {
+//    printk(LOG_NOTE, "cte=%p\n", cte);
+
+    struct dcb *my_dcb = (struct dcb *) data;
+
+    struct cte *result;
+    int ep_num = 0;
+    errval_t err = mdb_find_cap_for_address(mem_to_local_phys((lvaddr_t) cte), &result);
+    if (err_is_fail(err)) {
+        printk(LOG_ERR, "Type of cap: %d, kernel address %p, phys. address 0x%"PRIxLPADDR"\n", cte->cap.type, cte, mem_to_local_phys((lvaddr_t) cte));
+        printk(LOG_ERR, "kcb_current = %p\n", kcb_current);
+        printk(LOG_ERR, "%s:%s:%d \n", __FILE__, __FUNCTION__, __LINE__);
+        mdb_dump_all_the_things();
+        return (struct sysret) {
+            .error = err,
+            .value = 0,
+        };
+    }
+
+    assert(result->cap.type == ObjType_L1CNode ||
+           result->cap.type == ObjType_L2CNode ||
+           result->cap.type == ObjType_Dispatcher ||
+           result->cap.type == ObjType_KernelControlBlock);
+
+    struct cte *dispatcher;
+
+    while (!sys_debug_print_capabilities_check_cnode(result, &dispatcher)) {
+        err = mdb_find_cap_for_address(mem_to_local_phys((lvaddr_t) result), &result);
+        if (err_is_fail(err)) {
+            printk(LOG_ERR, "Type of cap: %d\n", cte->cap.type);
+            printk(LOG_ERR, "%s:%s:%d \n", __FILE__, __FUNCTION__, __LINE__);
+            return (struct sysret) {
+                .error = err,
+                .value = 0,
+            };
+        }
+    }
+
+    assert(dispatcher->cap.type == ObjType_Dispatcher);
+
+    struct dcb *dcb = dispatcher->cap.u.dispatcher.dcb;
+    dispatcher_handle_t handle = dcb->disp;
+    struct dispatcher_shared_generic *disp =
+        get_dispatcher_shared_generic(handle);
+    int cur_ep_num = 0;
+
+    if (my_dcb == dcb) {
+        char buffer[256];
+        struct capability *cap = &cte->cap;
+        if(cap->type == ObjType_EndPoint){
+            sprint_cap(buffer, 256, &cte->cap);
+            printf("%d\n", cap);
+            printk(LOG_NOTE, "disp->name=%s %s\n", disp->name, buffer);
+            ep_num = 1;
+            cur_ep_num = disp->ep_cap_cnt;
+            disp->ep_cap_list[cur_ep_num] = cap;
+            disp->ep_cap_cnt = disp->ep_cap_cnt + 1;
+        }
+    }
+
+    // if(ep_num != 0)
+        // printf("ep num : %d\n", ep_num);
+    return (struct sysret) {
+        .error = SYS_ERR_OK,
+        .value = ep_num,
+    };
+}
+
+struct sysret
+debug_print_cababilities_ep(struct dcb *dispatcher) {
+    return mdb_traverse_ep(MDB_TRAVERSAL_ORDER_ASCENDING, sys_debug_print_capabilities_cb_ep, dispatcher);
+}
+

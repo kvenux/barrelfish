@@ -29,5 +29,7 @@ sys_debug_print_capabilities(void);
 
 errval_t
 debug_print_cababilities(struct dcb *dispatcher);
+struct sysret
+debug_print_cababilities_ep(struct dcb *dispatcher);
 
 #endif

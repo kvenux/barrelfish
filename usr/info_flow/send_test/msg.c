@@ -161,13 +161,22 @@ int main(int argc, char *argv[])
     errval_t err;
 
     // debug_my_cspace();
+    debug_endpoints();
+    // struct capref ep_ref = debug_get_endpoint(2);
+    debug_get_endpoint(2);
     start_client();
     dispatcher_handle_t handle = curdispatcher();
     struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
     int ep_num = cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum).value;
     debug_printf("Endpoint num: %d\n", ep_num);
-    int ep_cap = cap_invoke2(dcb, DispatcherCmd_GetAllEndpoints, 3).value;
+    struct capability *cap = 0;
+    int ep_cap = cap_invoke3(dcb, DispatcherCmd_GetAllEndpoints, 3, (uintptr_t)cap).value;
     debug_printf("Endpoint cap: %d\n", ep_cap);
+    // debug_printf("Endpoint cap: %x\n", cap);
+
+    // err = cap_invoke3(dcb, DispatcherCmd_GetAllEndpoints, 3, (uintptr_t)cap).value;
+
+
     // cap_invoke2(cap_kernel, KernelCmd_Add_kcb, kcb_base).error;
     // err = invoke_dispatcher_dump_capabilities(dcb);
 

@@ -43,6 +43,9 @@
         "future": "c",
         "istream": "c",
         "locale": "c",
-        "thread": "c"
+        "thread": "c",
+        "__std_stream": "c",
+        "fstream": "c",
+        "streambuf": "c"
     }
 }

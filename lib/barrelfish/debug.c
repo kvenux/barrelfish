@@ -583,3 +583,170 @@ void debug_control_plane_forbidden(void)
 {
     debug_notify_syscall = true;
 }
+
+void debug_endpoints(void)
+{
+    struct capability root_cap;
+    struct capability l2_cap;
+
+    /* find out size of root cnode */
+    errval_t err = debug_cap_identify(cap_root, &root_cap);
+    assert(err_is_ok(err));
+    assert(root_cap.type == ObjType_L1CNode);
+
+    size_t c1size = 0;
+    err = invoke_cnode_get_size(cap_root, &c1size);
+    assert(err_is_ok(err));
+
+    int l1slots = c1size/sizeof(struct capability);
+    debug_printf("Printing L1 CNode (slots=%u)\n", l1slots);
+    for(int slot=0; slot < l1slots; slot++){
+
+        struct cnoderef cnode = build_cnoderef(cap_root, 0);
+        struct capref l2cnode = {
+            .cnode = cnode, .slot = slot
+        };
+        err = debug_cap_identify(l2cnode, &l2_cap);
+
+        // If cap type was Null, kernel returns error
+        if (err_no(err) == SYS_ERR_IDENTIFY_LOOKUP ||
+            err_no(err) == SYS_ERR_CAP_NOT_FOUND ||
+            err_no(err) == SYS_ERR_LMP_CAPTRANSFER_SRC_LOOKUP) {
+            continue;
+        } else if (err_is_fail(err)) {
+            DEBUG_ERR(err, "debug_cap_identify failed");
+            return;
+        }
+
+        struct capability cap;
+        struct cnoderef cnode_l2 = build_cnoderef(l2cnode, 1);
+        
+        // debug_printf("  Printing L2 CNode at L1 slot=%d\n", l2cnode.slot);
+
+        for(int i=0; i<L2_CNODE_SLOTS; i++){
+            struct capref pos = {
+                .cnode = cnode_l2, .slot = i
+            };
+
+            // Get cap data
+            err = debug_cap_identify(pos, &cap);
+            if (err_no(err) == SYS_ERR_IDENTIFY_LOOKUP ||
+                err_no(err) == SYS_ERR_CAP_NOT_FOUND ||
+                err_no(err) == SYS_ERR_LMP_CAPTRANSFER_SRC_LOOKUP) {
+                continue;
+            } else if (err_is_fail(err)) {
+                DEBUG_ERR(err, "debug_cap_identify failed");
+                return;
+            }
+
+            if(cap.type != ObjType_EndPoint){
+                continue;
+            }
+            char buf[256];
+            size_t prpos = 0;
+
+            prpos += snprintf(buf, sizeof(buf),
+                            "slot %" PRIuCADDR " caddr 0x%" PRIxCADDR " is a fuck ",
+                            pos.slot, get_cap_addr(pos));
+            assert(prpos < sizeof(buf));
+            prpos += debug_print_cap(&buf[prpos], sizeof(buf) - prpos, &cap);
+            assert(prpos < sizeof(buf));
+            debug_printf("    %s\n", buf);
+        }
+    }
+}
+
+
+struct capref debug_get_endpoint(int num)
+{
+    struct capability root_cap;
+    struct capability l2_cap;
+
+    /* find out size of root cnode */
+    errval_t err = debug_cap_identify(cap_root, &root_cap);
+    assert(err_is_ok(err));
+    assert(root_cap.type == ObjType_L1CNode);
+
+    size_t c1size = 0;
+    err = invoke_cnode_get_size(cap_root, &c1size);
+    assert(err_is_ok(err));
+
+    int l1slots = c1size/sizeof(struct capability);
+    int cnt = 0;
+    struct capref ret_val = {
+        .cnode = build_cnoderef(cap_root, 0), 
+        .slot = -1
+    };
+    // debug_printf("Printing L1 CNode (slots=%u)\n", l1slots);
+    for(int slot=0; slot < l1slots; slot++){
+
+        struct cnoderef cnode = build_cnoderef(cap_root, 0);
+        struct capref l2cnode = {
+            .cnode = cnode, .slot = slot
+        };
+        err = debug_cap_identify(l2cnode, &l2_cap);
+
+        // If cap type was Null, kernel returns error
+        if (err_no(err) == SYS_ERR_IDENTIFY_LOOKUP ||
+            err_no(err) == SYS_ERR_CAP_NOT_FOUND ||
+            err_no(err) == SYS_ERR_LMP_CAPTRANSFER_SRC_LOOKUP) {
+            continue;
+        } else if (err_is_fail(err)) {
+            DEBUG_ERR(err, "debug_cap_identify failed");
+            return ret_val;
+        }
+
+        struct capability cap;
+        struct cnoderef cnode_l2 = build_cnoderef(l2cnode, 1);
+        
+        // debug_printf("  Printing L2 CNode at L1 slot=%d\n", l2cnode.slot);
+
+        for(int i=0; i<L2_CNODE_SLOTS; i++){
+            struct capref pos = {
+                .cnode = cnode_l2, .slot = i
+            };
+
+            // Get cap data
+            err = debug_cap_identify(pos, &cap);
+            if (err_no(err) == SYS_ERR_IDENTIFY_LOOKUP ||
+                err_no(err) == SYS_ERR_CAP_NOT_FOUND ||
+                err_no(err) == SYS_ERR_LMP_CAPTRANSFER_SRC_LOOKUP) {
+                continue;
+            } else if (err_is_fail(err)) {
+                DEBUG_ERR(err, "debug_cap_identify failed");
+                return ret_val;
+            }
+
+            if(cap.type == ObjType_EndPoint){
+                if(num == cnt){
+                    char buf[256];
+                    size_t prpos = 0;
+
+                    prpos += snprintf(buf, sizeof(buf),
+                                    "slot %" PRIuCADDR " caddr 0x%" PRIxCADDR " is a fuck ",
+                                    pos.slot, get_cap_addr(pos));
+                    assert(prpos < sizeof(buf));
+                    prpos += debug_print_cap(&buf[prpos], sizeof(buf) - prpos, &cap);
+                    assert(prpos < sizeof(buf));
+                    debug_printf("    %s\n", buf);
+                    return pos;
+                }
+                cnt = cnt + 1;
+                // continue;
+                // char buf[256];
+                // size_t prpos = 0;
+
+                // prpos += snprintf(buf, sizeof(buf),
+                //                 "slot %" PRIuCADDR " caddr 0x%" PRIxCADDR " is a fuck ",
+                //                 pos.slot, get_cap_addr(pos));
+                // assert(prpos < sizeof(buf));
+                // prpos += debug_print_cap(&buf[prpos], sizeof(buf) - prpos, &cap);
+                // assert(prpos < sizeof(buf));
+                // debug_printf("    %s\n", buf);
+            }
+        }
+    }
+    
+    return ret_val;
+}
+

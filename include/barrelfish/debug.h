@@ -31,6 +31,8 @@ errval_t debug_dump_hw_ptables(void);
 errval_t debug_cap_trace_ctrl(uintptr_t types, genpaddr_t start_addr, gensize_t size);
 void debug_cspace(struct capref root);
 void debug_my_cspace(void);
+void debug_endpoints(void);
+struct capref debug_get_endpoint(int num);
 void debug_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 int debug_print_cap(char *buf, size_t len, struct capability *cap);
 int debug_print_cap_at_capref(char *buf, size_t len, struct capref cap);

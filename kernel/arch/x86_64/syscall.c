@@ -53,101 +53,101 @@
 extern uint64_t user_stack_save;
 
 
-static errval_t lmp_transfer_cap_ep(struct capability *ep, struct dcb *send,
-                                 capaddr_t send_cptr, uint8_t send_level,
-                                 bool give_away)
-{
-    errval_t err;
-    /* Parameter checking */
-    assert(send_cptr != CPTR_NULL);
-    assert(send != NULL);
-    assert(ep != NULL);
-    assert(ep->type == ObjType_EndPoint);
-    struct dcb *recv = ep->u.endpoint.listener;
-    assert(recv != NULL);
-    assert(ep->u.endpoint.epoffset != 0);
+// static errval_t lmp_transfer_cap_ep(struct capability *ep, struct dcb *send,
+//                                  capaddr_t send_cptr, uint8_t send_level,
+//                                  bool give_away)
+// {
+//     errval_t err;
+//     /* Parameter checking */
+//     assert(send_cptr != CPTR_NULL);
+//     assert(send != NULL);
+//     assert(ep != NULL);
+//     assert(ep->type == ObjType_EndPoint);
+//     struct dcb *recv = ep->u.endpoint.listener;
+//     assert(recv != NULL);
+//     assert(ep->u.endpoint.epoffset != 0);
 
-    // printk(LOG_NOTE, "%s: ep->u.endpoint.epoffset = %"PRIuLVADDR"\n", __FUNCTION__, ep->u.endpoint.epoffset);
-    /* Look up the slot receiver can receive caps in */
-    struct lmp_endpoint_kern *recv_ep
-        = (void *)((uint8_t *)recv->disp + ep->u.endpoint.epoffset);
+//     // printk(LOG_NOTE, "%s: ep->u.endpoint.epoffset = %"PRIuLVADDR"\n", __FUNCTION__, ep->u.endpoint.epoffset);
+//     /* Look up the slot receiver can receive caps in */
+//     struct lmp_endpoint_kern *recv_ep
+//         = (void *)((uint8_t *)recv->disp + ep->u.endpoint.epoffset);
 
-    // Lookup cspace root for receiving
-    struct capability *recv_cspace_cap;
-    // XXX: do we want a level into receiver's cspace here?
-    // printk(LOG_NOTE, "recv_cspace_ptr = %"PRIxCADDR"\n", recv_ep->recv_cspc);
-    err = caps_lookup_cap(&recv->cspace.cap, recv_ep->recv_cspc, 2,
-                          &recv_cspace_cap, CAPRIGHTS_READ_WRITE);
-    if (err_is_fail(err) || recv_cspace_cap->type != ObjType_L1CNode) {
-        return SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
-    }   
-    // Check index into L1 cnode
-    capaddr_t l1index = recv_ep->recv_cptr >> L2_CNODE_BITS;
-    if (l1index >= cnode_get_slots(recv_cspace_cap)) {
-        return SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
-    }
-    // Get the cnode
-    struct cte *recv_cnode_cte = caps_locate_slot(get_address(recv_cspace_cap),
-                                                  l1index);
-    struct capability *recv_cnode_cap = &recv_cnode_cte->cap;
-    // Check for cnode type
-    if (recv_cnode_cap->type != ObjType_L2CNode) {
-        return SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
-    }
-    // The slot within the cnode
-    struct cte *recv_cte;
-    recv_cte = caps_locate_slot(get_address(recv_cnode_cap),
-                                recv_ep->recv_cptr & MASK(L2_CNODE_BITS));
+//     // Lookup cspace root for receiving
+//     struct capability *recv_cspace_cap;
+//     // XXX: do we want a level into receiver's cspace here?
+//     // printk(LOG_NOTE, "recv_cspace_ptr = %"PRIxCADDR"\n", recv_ep->recv_cspc);
+//     err = caps_lookup_cap(&recv->cspace.cap, recv_ep->recv_cspc, 2,
+//                           &recv_cspace_cap, CAPRIGHTS_READ_WRITE);
+//     if (err_is_fail(err) || recv_cspace_cap->type != ObjType_L1CNode) {
+//         return SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
+//     }   
+//     // Check index into L1 cnode
+//     capaddr_t l1index = recv_ep->recv_cptr >> L2_CNODE_BITS;
+//     if (l1index >= cnode_get_slots(recv_cspace_cap)) {
+//         return SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
+//     }
+//     // Get the cnode
+//     struct cte *recv_cnode_cte = caps_locate_slot(get_address(recv_cspace_cap),
+//                                                   l1index);
+//     struct capability *recv_cnode_cap = &recv_cnode_cte->cap;
+//     // Check for cnode type
+//     if (recv_cnode_cap->type != ObjType_L2CNode) {
+//         return SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
+//     }
+//     // The slot within the cnode
+//     struct cte *recv_cte;
+//     recv_cte = caps_locate_slot(get_address(recv_cnode_cap),
+//                                 recv_ep->recv_cptr & MASK(L2_CNODE_BITS));
 
-    /* Look up source slot in sender */
-    struct cte *send_cte;
-    err = caps_lookup_slot(&send->cspace.cap, send_cptr, send_level,
-                           &send_cte, CAPRIGHTS_READ);
-    if (err_is_fail(err)) {
-        return err_push(err, SYS_ERR_LMP_CAPTRANSFER_SRC_LOOKUP);
-    }
+//     /* Look up source slot in sender */
+//     struct cte *send_cte;
+//     err = caps_lookup_slot(&send->cspace.cap, send_cptr, send_level,
+//                            &send_cte, CAPRIGHTS_READ);
+//     if (err_is_fail(err)) {
+//         return err_push(err, SYS_ERR_LMP_CAPTRANSFER_SRC_LOOKUP);
+//     }
 
-    /* Is destination empty */
-    if (recv_cte->cap.type != ObjType_Null) {
-        debug(SUBSYS_DISPATCH, "%s: dest slot occupied\n", __FUNCTION__);
-        return SYS_ERR_LMP_CAPTRANSFER_DST_SLOT_OCCUPIED;
-    }
+//     /* Is destination empty */
+//     if (recv_cte->cap.type != ObjType_Null) {
+//         debug(SUBSYS_DISPATCH, "%s: dest slot occupied\n", __FUNCTION__);
+//         return SYS_ERR_LMP_CAPTRANSFER_DST_SLOT_OCCUPIED;
+//     }
 
-    if(send_cte->cap.type == ObjType_EndPoint){
-        // sending disp
-        struct dispatcher_shared_generic *send_disp =
-                            get_dispatcher_shared_generic(send->disp);
-        // to disp
-        struct dcb *listener = ep->u.endpoint.listener;
-        struct dispatcher_shared_generic *to_disp =
-                            get_dispatcher_shared_generic(listener->disp);
-        // printf("LMP_dispatch transfer cap %s to %s\n", send_disp->name, to_disp->name);
+//     if(send_cte->cap.type == ObjType_EndPoint){
+//         // sending disp
+//         struct dispatcher_shared_generic *send_disp =
+//                             get_dispatcher_shared_generic(send->disp);
+//         // to disp
+//         struct dcb *listener = ep->u.endpoint.listener;
+//         struct dispatcher_shared_generic *to_disp =
+//                             get_dispatcher_shared_generic(listener->disp);
+//         // printf("LMP_dispatch transfer cap %s to %s\n", send_disp->name, to_disp->name);
                             
-        // sending ep
-        // struct dcb *sending_ep_listener = recv_cte->cap.u.endpoint.listener;
-        // struct dispatcher_shared_generic *ep_pointing_disp =
-        //                     get_dispatcher_shared_generic(sending_ep_listener->disp);
-        // printf("LMP_dispatch transfer cap %s to %s with ep to %s\n", send_disp->name, to_disp->name, ep_pointing_disp->name);
-    }
+//         // sending ep
+//         // struct dcb *sending_ep_listener = recv_cte->cap.u.endpoint.listener;
+//         // struct dispatcher_shared_generic *ep_pointing_disp =
+//         //                     get_dispatcher_shared_generic(sending_ep_listener->disp);
+//         // printf("LMP_dispatch transfer cap %s to %s with ep to %s\n", send_disp->name, to_disp->name, ep_pointing_disp->name);
+//     }
 
-    //caps_trace(__func__, __LINE__, send_cte, "transferring");
-    //TRACE_CAP_MSG("transferring", send_cte);
+//     //caps_trace(__func__, __LINE__, send_cte, "transferring");
+//     //TRACE_CAP_MSG("transferring", send_cte);
 
-    /* Insert send cap into recv cap */
-    err = caps_copy_to_cte(recv_cte, send_cte, false, 0, 0);
-    assert(err_is_ok(err)); // Cannot fail after checking that slot is empty
+//     /* Insert send cap into recv cap */
+//     err = caps_copy_to_cte(recv_cte, send_cte, false, 0, 0);
+//     assert(err_is_ok(err)); // Cannot fail after checking that slot is empty
 
-    if (give_away) {
-        err = caps_delete(send_cte);
-        if (err_is_fail(err)) {
-            printk(LOG_NOTE, "deleting source of lmp captransfer failed: %"PRIuERRV"\n", err);
-        }
-        assert(err_is_ok(err)); // A copy now exists in the recv slot, so this
-                                // should not fail
-    }
+//     if (give_away) {
+//         err = caps_delete(send_cte);
+//         if (err_is_fail(err)) {
+//             printk(LOG_NOTE, "deleting source of lmp captransfer failed: %"PRIuERRV"\n", err);
+//         }
+//         assert(err_is_ok(err)); // A copy now exists in the recv slot, so this
+//                                 // should not fail
+//     }
 
-    return SYS_ERR_OK;
-}
+//     return SYS_ERR_OK;
+// }
 
 
 /* FIXME: lots of missing argument checks in this function */
@@ -1117,6 +1117,143 @@ static struct sysret dispatcher_get_ep_num(struct capability *cap,
     // return SYSRET(SYS_ERR_OK);
 }
 
+static struct sysret dispatcher_grant_ep_cap(struct capability *cap,
+                                             int cmd, uintptr_t *args)
+{
+    assert(cap->type == ObjType_Dispatcher);
+
+    printf("disp grant ep cap\n");
+
+    capaddr_t grant_ep_addr = args[0];
+    capaddr_t dest_ep_addr = args[1];
+    struct sysret sr;
+
+    struct capability *grant_cap = NULL;
+    sr.error = caps_lookup_cap(&dcb_current->cspace.cap, grant_ep_addr,
+                                       2, &grant_cap, CAPRIGHTS_READ);
+
+    struct capability *dest_cap = NULL;
+    sr.error = caps_lookup_cap(&dcb_current->cspace.cap, dest_ep_addr,
+                                       2, &dest_cap, CAPRIGHTS_READ);
+
+    struct dispatcher_shared_generic *from_disp =
+                        get_dispatcher_shared_generic(dcb_current->disp);
+    struct dcb *listener = grant_cap->u.endpoint.listener;
+    struct dispatcher_shared_generic *to_disp =
+                        get_dispatcher_shared_generic(listener->disp);
+    
+    struct dcb *dest_listener = dest_cap->u.endpoint.listener;
+    struct dispatcher_shared_generic *dest_disp =
+                        get_dispatcher_shared_generic(dest_listener->disp);
+    printf("Grant from %s to %s with dest %s\n", from_disp->name, to_disp->name, dest_disp->name);
+    debug_print_cababilities_ep(listener);
+    // sr.error = lmp_transfer_cap_ep(grant_cap, dcb_current, dest_ep_addr, 2, 0);
+    // lmp_deliver(to, dcb_current, args, 0, NULL, 2, 0);
+    // printf('sr.error %d\n', sr.error);
+    // struct dcb *dispatcher = cap->u.dispatcher.dcb;
+    // struct dispatcher_shared_generic *cur_dis_generic =
+    //                     get_dispatcher_shared_generic(dispatcher->disp);
+    // cur_dis_generic->ep_cap_cnt = 0;
+
+    /* Parameter checking */
+    struct capability *ep = grant_cap;
+    struct dcb *send = dcb_current;
+    capaddr_t send_cptr = dest_ep_addr;
+    uint8_t send_level = 2;
+    errval_t err;
+    assert(send_cptr != CPTR_NULL);
+    assert(send != NULL);
+    assert(ep != NULL);
+    assert(ep->type == ObjType_EndPoint);
+    struct dcb *recv = ep->u.endpoint.listener;
+    assert(recv != NULL);
+    assert(ep->u.endpoint.epoffset != 0);
+    printf("passed Parameter checking\n");
+    // printk(LOG_NOTE, "%s: ep->u.endpoint.epoffset = %"PRIuLVADDR"\n", __FUNCTION__, ep->u.endpoint.epoffset);
+    /* Look up the slot receiver can receive caps in */
+    struct lmp_endpoint_kern *recv_ep
+        = (void *)((uint8_t *)recv->disp + ep->u.endpoint.epoffset);
+
+    // Lookup cspace root for receiving
+    struct capability *recv_cspace_cap;
+    // XXX: do we want a level into receiver's cspace here?
+    // printk(LOG_NOTE, "recv_cspace_ptr = %"PRIxCADDR"\n", recv_ep->recv_cspc);
+    err = caps_lookup_cap(&recv->cspace.cap, recv_ep->recv_cspc, 2,
+                          &recv_cspace_cap, CAPRIGHTS_READ_WRITE);
+    if (err_is_fail(err) || recv_cspace_cap->type != ObjType_L1CNode) {
+        sr.error = SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
+        return sr;
+    }   
+    // Check index into L1 cnode
+    capaddr_t l1index = recv_ep->recv_cptr >> L2_CNODE_BITS;
+    if (l1index >= cnode_get_slots(recv_cspace_cap)) {
+        sr.error = SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
+        return sr;
+    }
+    // Get the cnode
+    struct cte *recv_cnode_cte = caps_locate_slot(get_address(recv_cspace_cap),
+                                                  l1index);
+    struct capability *recv_cnode_cap = &recv_cnode_cte->cap;
+    // Check for cnode type
+    if (recv_cnode_cap->type != ObjType_L2CNode) {
+        sr.error = SYS_ERR_LMP_CAPTRANSFER_DST_CNODE_INVALID;
+        return sr;
+    }
+    // The slot within the cnode
+    struct cte *recv_cte;
+    recv_cte = caps_locate_slot(get_address(recv_cnode_cap),
+                                recv_ep->recv_cptr & MASK(L2_CNODE_BITS));
+
+    /* Look up source slot in sender */
+    struct cte *send_cte;
+    err = caps_lookup_slot(&send->cspace.cap, send_cptr, send_level,
+                           &send_cte, CAPRIGHTS_READ);
+    if (err_is_fail(err)) {
+        sr.error = err_push(err, SYS_ERR_LMP_CAPTRANSFER_SRC_LOOKUP);
+        return sr;
+    }
+
+    /* Is destination empty */
+    if (recv_cte->cap.type != ObjType_Null) {
+        debug(SUBSYS_DISPATCH, "%s: dest slot occupied\n", __FUNCTION__);
+        sr.error = SYS_ERR_LMP_CAPTRANSFER_DST_SLOT_OCCUPIED;
+        return sr;
+    }
+
+    if(send_cte->cap.type == ObjType_EndPoint){
+        // sending disp
+        struct dispatcher_shared_generic *send_disp =
+                            get_dispatcher_shared_generic(send->disp);
+        // to disp
+        struct dcb *listener = ep->u.endpoint.listener;
+        struct dispatcher_shared_generic *to_disp =
+                            get_dispatcher_shared_generic(listener->disp);
+        printf("LMP_dispatch transfer cap %s to %s level %d \n", send_disp->name, to_disp->name, send_level);
+                            
+        // sending ep
+        // struct dcb *sending_ep_listener = recv_cte->cap.u.endpoint.listener;
+        // struct dispatcher_shared_generic *ep_pointing_disp =
+        //                     get_dispatcher_shared_generic(sending_ep_listener->disp);
+        // printf("LMP_dispatch transfer cap %s to %s with ep to %s\n", send_disp->name, to_disp->name, ep_pointing_disp->name);
+    }
+
+    //caps_trace(__func__, __LINE__, send_cte, "transferring");
+    //TRACE_CAP_MSG("transferring", send_cte);
+
+    /* Insert send cap into recv cap */
+    err = caps_copy_to_cte(recv_cte, send_cte, false, 0, 0);
+    assert(err_is_ok(err)); // Cannot fail after checking that slot is empty
+
+
+
+    // sr = debug_print_cababilities_ep(dispatcher);
+    debug_print_cababilities_ep(listener);
+    sr.value = 0;
+    return sr;
+
+    // return SYSRET(SYS_ERR_OK);
+}
+
 /*
  * \brief Activate performance monitoring
  *
@@ -1290,6 +1427,7 @@ static invocation_handler_t invocations[ObjType_Num][CAP_MAX_CMD] = {
         [DispatcherCmd_DumpCapabilities] = dispatcher_dump_capabilities,
         [DispatcherCmd_GetAllEndpoints] = dispatcher_get_all_ep,
         [DispatcherCmd_GetEndpointsNum] = dispatcher_get_ep_num,
+        [DispatcherCmd_GrantEndpointCap] = dispatcher_grant_ep_cap,
 	[DispatcherCmd_Vmread] = handle_vmread,
 	[DispatcherCmd_Vmwrite] = handle_vmwrite,
 	[DispatcherCmd_Vmptrld] = handle_vmptrld,
@@ -1496,6 +1634,7 @@ struct sysret sys_syscall(uint64_t syscall, uint64_t arg0, uint64_t arg1,
 
         // Endpoint cap, do LMP
         if (to->type == ObjType_EndPoint) {
+            // printf('send_level: %d \n', send_level);                        
             struct dcb *listener = to->u.endpoint.listener;
             assert(listener != NULL);
 
@@ -1518,17 +1657,36 @@ struct sysret sys_syscall(uint64_t syscall, uint64_t arg0, uint64_t arg1,
                         get_dispatcher_shared_generic(dcb_current->disp);
             struct dispatcher_shared_generic *to_disp =
                         get_dispatcher_shared_generic(listener->disp);
-            // printf("LMP from %s to %s\n", from_disp->name, to_disp->name);
+            // printf("LMP from %s to %s send_level %d\n", from_disp->name, to_disp->name, send_level);
             // printf("rights: %d\n", to->rights);
-            uint64_t cmd = args[0];
-            if(cmd == 9853){
-                int cptr = args[0];
-                lmp_transfer_cap_ep(to, dcb_current, cptr, send_level, give_away);
-                retval.value = 0;
-                retval.error = SYS_ERR_OK;
-                printf('grant ep cap\n');
-                break;
-            }
+            // uint64_t cmd = args[0];
+            // if(cmd == 9853){
+            //     printf('before grant ep cap\n');                
+            //     printf("first true cmd: %d\n", cmd);
+            //     // int cptr = args[1];
+            //     // lmp_transfer_cap_ep(to, dcb_current, cptr, send_level, give_away);
+            //     retval.value = 0;
+            //     retval.error = SYS_ERR_OK;
+            //     printf('grant ep cap\n');
+            //     break;
+            // }
+            // if(from_disp->name[0] == 's' && from_disp->name[1] == 'e' && to_disp->name[0] == 'r'){
+            //     printf("true cmd: %d\n", cmd);
+            //     printf("LMP from %s to %s\n", from_disp->name, to_disp->name);
+            //     if(cmd == 9853){
+                    
+            //     }
+            // }
+            // printf("cmd: %d\n", cmd);
+            // if(cmd == 9853){
+            //     printf('before grant ep cap\n');
+            //     int cptr = args[1];
+            //     // lmp_transfer_cap_ep(to, dcb_current, cptr, send_level, give_away);
+            //     retval.value = 0;
+            //     retval.error = SYS_ERR_OK;
+            //     printf('grant ep cap\n');
+            //     break;
+            // }
             // printf("ep cap cmd: %d\n", cmd);
 
             // try to deliver message

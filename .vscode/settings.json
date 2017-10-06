@@ -46,6 +46,10 @@
         "thread": "c",
         "__std_stream": "c",
         "fstream": "c",
-        "streambuf": "c"
+        "streambuf": "c",
+        "__bit_reference": "c",
+        "__hash_table": "c",
+        "__sso_allocator": "c",
+        "__tree": "c"
     }
 }

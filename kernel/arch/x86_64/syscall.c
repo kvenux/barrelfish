@@ -200,9 +200,9 @@ static struct sysret handle_retype_common(struct capability *root,
     uint64_t dest_cnode_level = args[7];
 
     TRACE(KERNEL, SC_RETYPE, 0);
-    if(type == ObjType_EndPoint){
-        printf("retype_common endpoint\n");
-    }
+    // if(type == ObjType_EndPoint){
+    //     printf("retype_common endpoint\n");
+    // }
     struct sysret sr = sys_retype(root, source_croot, source_cptr, offset, type,
                                   objsize, objcount, dest_cspace_cptr,
                                   dest_cnode_cptr, dest_cnode_level,
@@ -1117,12 +1117,54 @@ static struct sysret dispatcher_get_ep_num(struct capability *cap,
     // return SYSRET(SYS_ERR_OK);
 }
 
+static struct sysret dispatcher_remove_ep_cap(struct capability *cap,
+    int cmd, uintptr_t *args)
+{
+    struct sysret sr;
+
+    assert(cap->type == ObjType_Dispatcher);
+
+    // printf("disp remove ep cap\n");
+
+    // debug_print_cababilities_ep(dcb_current);
+    capaddr_t remove_ep_addr = args[0];
+    capaddr_t remove_ep_level = args[1];
+
+    struct capability *remove_cap = NULL;
+
+    sr.error = caps_lookup_cap(&dcb_current->cspace.cap, remove_ep_addr,
+                            remove_ep_level, &remove_cap, CAPRIGHTS_READ);
+
+    if(remove_cap->type != ObjType_EndPoint){
+        // printf("remove not an endpoint\n");
+        sr.error = SYS_ERR_CAP_NOT_FOUND;
+        return sr;
+    }
+
+    struct dispatcher_shared_generic *from_disp = 
+        get_dispatcher_shared_generic(dcb_current->disp);
+            
+    struct dcb *listener = remove_cap->u.endpoint.listener;
+    struct dispatcher_shared_generic *to_disp =
+        get_dispatcher_shared_generic(listener->disp);
+
+    // cur_dis_generic->ep_cap_cnt = 0;
+    // printf("Remove invoke: %s removes endpoint to %s \n", from_disp->name, to_disp->name);
+
+    sr = sys_delete(remove_cap, remove_ep_addr, remove_ep_level);
+    // printf("remove res: %d\n", sr.error);
+    // debug_print_cababilities_ep(dcb_current);
+    return sr;
+
+// return SYSRET(SYS_ERR_OK);
+}
+
 static struct sysret dispatcher_grant_ep_cap(struct capability *cap,
                                              int cmd, uintptr_t *args)
 {
     assert(cap->type == ObjType_Dispatcher);
 
-    printf("disp grant ep cap\n");
+    // printf("disp grant ep cap\n");
 
     capaddr_t grant_ep_addr = args[0];
     capaddr_t dest_ep_addr = args[1];
@@ -1145,8 +1187,8 @@ static struct sysret dispatcher_grant_ep_cap(struct capability *cap,
     struct dcb *dest_listener = dest_cap->u.endpoint.listener;
     struct dispatcher_shared_generic *dest_disp =
                         get_dispatcher_shared_generic(dest_listener->disp);
-    printf("Grant from %s to %s with dest %s\n", from_disp->name, to_disp->name, dest_disp->name);
-    debug_print_cababilities_ep(listener);
+    // printf("Grant from %s to %s with dest %s\n", from_disp->name, to_disp->name, dest_disp->name);
+    // debug_print_cababilities_ep(listener);
     // sr.error = lmp_transfer_cap_ep(grant_cap, dcb_current, dest_ep_addr, 2, 0);
     // lmp_deliver(to, dcb_current, args, 0, NULL, 2, 0);
     // printf('sr.error %d\n', sr.error);
@@ -1168,7 +1210,7 @@ static struct sysret dispatcher_grant_ep_cap(struct capability *cap,
     struct dcb *recv = ep->u.endpoint.listener;
     assert(recv != NULL);
     assert(ep->u.endpoint.epoffset != 0);
-    printf("passed Parameter checking\n");
+    // printf("passed Parameter checking\n");
     // printk(LOG_NOTE, "%s: ep->u.endpoint.epoffset = %"PRIuLVADDR"\n", __FUNCTION__, ep->u.endpoint.epoffset);
     /* Look up the slot receiver can receive caps in */
     struct lmp_endpoint_kern *recv_ep
@@ -1228,7 +1270,7 @@ static struct sysret dispatcher_grant_ep_cap(struct capability *cap,
         struct dcb *listener = ep->u.endpoint.listener;
         struct dispatcher_shared_generic *to_disp =
                             get_dispatcher_shared_generic(listener->disp);
-        printf("LMP_dispatch transfer cap %s to %s level %d \n", send_disp->name, to_disp->name, send_level);
+        // printf("LMP_dispatch transfer cap %s to %s level %d \n", send_disp->name, to_disp->name, send_level);
                             
         // sending ep
         // struct dcb *sending_ep_listener = recv_cte->cap.u.endpoint.listener;
@@ -1247,7 +1289,7 @@ static struct sysret dispatcher_grant_ep_cap(struct capability *cap,
 
 
     // sr = debug_print_cababilities_ep(dispatcher);
-    debug_print_cababilities_ep(listener);
+    // debug_print_cababilities_ep(listener);
     sr.value = 0;
     return sr;
 
@@ -1428,6 +1470,7 @@ static invocation_handler_t invocations[ObjType_Num][CAP_MAX_CMD] = {
         [DispatcherCmd_GetAllEndpoints] = dispatcher_get_all_ep,
         [DispatcherCmd_GetEndpointsNum] = dispatcher_get_ep_num,
         [DispatcherCmd_GrantEndpointCap] = dispatcher_grant_ep_cap,
+        [DispatcherCmd_RemoveEndpointCap] = dispatcher_remove_ep_cap,
 	[DispatcherCmd_Vmread] = handle_vmread,
 	[DispatcherCmd_Vmwrite] = handle_vmwrite,
 	[DispatcherCmd_Vmptrld] = handle_vmptrld,
@@ -1658,6 +1701,27 @@ struct sysret sys_syscall(uint64_t syscall, uint64_t arg0, uint64_t arg1,
             struct dispatcher_shared_generic *to_disp =
                         get_dispatcher_shared_generic(listener->disp);
             // printf("LMP from %s to %s send_level %d\n", from_disp->name, to_disp->name, send_level);
+            // if(from_disp->name[0] == 'l' && from_disp->name[1] == 'm' && to_disp->name[0] == 'l' && to_disp->name[1] == 'm'){
+            //     printf("LMP from %s to %s send_level %d\n", from_disp->name, to_disp->name, send_level);
+            // }
+            // if(strcmp("lmp_bench_send", from_disp->name) == 0){
+            //     printf("LMP from %s to %s rights %d\n", from_disp->name, to_disp->name, to->rights);
+            //     // struct sysret sr;
+            //     // from_disp->ep_cap_cnt = 0;
+            //     // sr = debug_print_cababilities_ep(dcb_current);
+            //     // if(sr.error != SYS_ERR_OK){
+            //         // printf("lmp get ep num ERROR\n");
+            //     // }
+            //     // if(from_disp->ep_cap_cnt == 0){
+            //         // debug_print_cababilities_ep(dcb_current);
+            //     // }
+            //     // else{
+            //     //     for(int i=0;i<from_disp->ep_cap_cnt;i++){
+            //     //         if(from_disp->)
+            //     //     }
+            //     // }
+            // }
+
             // printf("rights: %d\n", to->rights);
             // uint64_t cmd = args[0];
             // if(cmd == 9853){

@@ -40,10 +40,10 @@ static void rx_msg_ints(struct xmplmsg_binding *b, int ia, int ib)
 static void rx_msg_string(struct xmplmsg_binding *b, const char *str)
 {
     debug_printf("server: received msg_string:\n\t%s\n", str);
-    debug_endpoints();
-    // dispatcher_handle_t handle = curdispatcher();
-    // struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
-    // cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum);
+    // debug_endpoints();
+    dispatcher_handle_t handle = curdispatcher();
+    struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
+    cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum);
     // free(str);
 }
 
@@ -96,21 +96,21 @@ int main(int argc, char *argv[])
 
     // debug_my_cspace();
     debug_endpoints();
-    // dispatcher_handle_t handle = curdispatcher();
-    // struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
-    // cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum);
+    dispatcher_handle_t handle = curdispatcher();
+    struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
+    cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum);
     // err = cap_retype(cap_selfep, cap_dispatcher, 0, ObjType_EndPoint, 0, 1);
     // if (err_is_fail(err)) {
     //     DEBUG_ERR(err, "Failed to create our endpoint to self");
     //     abort();
     // }
-    dispatcher_handle_t handle = curdispatcher();
-    struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
-    int ep_num = cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum).value;
-    debug_printf("Endpoint num: %d\n", ep_num);
+    // dispatcher_handle_t handle = curdispatcher();
+    // struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
+    // int ep_num = cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum).value;
+    // debug_printf("Endpoint num: %d\n", ep_num);
     start_server();
-    ep_num = cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum).value;
-    debug_printf("Endpoint num: %d\n", ep_num);
+    // ep_num = cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum).value;
+    // debug_printf("Endpoint num: %d\n", ep_num);
 
     struct waitset *ws = get_default_waitset();
     while (1) {

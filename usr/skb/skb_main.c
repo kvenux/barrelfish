@@ -140,6 +140,9 @@ int main(int argc, char**argv)
     free(sqs);
     sqs = NULL;
 
+    // dispatcher_handle_t handle = curdispatcher();
+    // struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
+    // cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum);
     messages_handler_loop();
 }
 

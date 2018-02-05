@@ -10,11 +10,8 @@
 --
 --------------------------------------------------------------------------
 
-[ build application { target = "info_flow/send_test",
+[ build application { target = "lmp_bench/lmp_bench_recv",
                       cFiles = [ "msg.c" ],
-		      flounderBindings = [ "xmplmsg" ],
-              addLibraries = libDeps [
-                                                "vfs_ramfs"
-                                                ]
+		      flounderBindings = [ "lmpbench" ]
                     }
 ]

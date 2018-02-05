@@ -294,7 +294,7 @@ static errval_t lmp_transfer_cap(struct capability *ep, struct dcb *send,
         struct dcb *listener = ep->u.endpoint.listener;
         struct dispatcher_shared_generic *to_disp =
                             get_dispatcher_shared_generic(listener->disp);
-        printf("LMP_dispatch transfer cap %s to %s level %d give_aways %d\n", send_disp->name, to_disp->name, send_level, give_away);
+        // printf("LMP_dispatch transfer cap %s to %s level %d give_aways %d\n", send_disp->name, to_disp->name, send_level, give_away);
                             
         // sending ep
         // struct dcb *sending_ep_listener = recv_cte->cap.u.endpoint.listener;

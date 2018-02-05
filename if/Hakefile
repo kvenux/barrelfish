@@ -86,6 +86,7 @@
                "xeon_phi_manager",
                "xmplcr",
                "xmplmsg",
+               "lmpbench",
                "xmplrpc",
                "xmplthc",
                "xomp",

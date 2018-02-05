@@ -141,6 +141,7 @@ let bin_rcce_lu = [ "/sbin/" ++ f | f <- [
                         "elb_app",
                         "elb_app_tcp",
                         "lrpc_bench",
+                        "lrpc_bench_server",
                         "mdb_bench",
                         "mdb_bench_old",
                         "netthroughput",
@@ -229,7 +230,9 @@ let bin_rcce_lu = [ "/sbin/" ++ f | f <- [
                            "xeon_phi_mgr",
                            "examples/xmpl-hello",
                            "info_flow/recv_test",
-                           "info_flow/send_test"
+                           "info_flow/send_test",
+                           "lmp_bench/lmp_bench_recv",
+                           "lmp_bench/lmp_bench_send"
                            ]] ++ modules_common
 
     -- the following are broken in the newidc system

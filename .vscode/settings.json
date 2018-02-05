@@ -50,6 +50,13 @@
         "__bit_reference": "c",
         "__hash_table": "c",
         "__sso_allocator": "c",
-        "__tree": "c"
+        "__tree": "c",
+        "nameservice_client.h": "c",
+        "xmplmsg_defs.h": "c",
+        "perfmon.h": "c",
+        "debug.h": "c",
+        "init.h": "c",
+        "algorithm": "c",
+        "lmpbench_defs.h": "c"
     }
 }

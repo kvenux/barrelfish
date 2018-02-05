@@ -25,6 +25,11 @@
                       flounderBindings = [ "bench" ],
                       addLibraries = ["bench"] },
 
+  build application { target = "lrpc_bench_server",
+                      cFiles = [ "lrpc_bench_server.c" ],
+                      flounderBindings = [ "bench" ],
+                      addLibraries = ["bench"] },
+
   build application { target = "tsc_bench",
                       cFiles = [ "tsc_bench.c" ],
                       addCFlags = [ "-DCACHE_BENCH" ],

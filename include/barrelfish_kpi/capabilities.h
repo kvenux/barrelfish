@@ -441,6 +441,7 @@ enum dispatcher_cmd {
     DispatcherCmd_GetEndpointsNum,  ///< get the number of endpoints
     DispatcherCmd_GetAllEndpoints,  ///< get all the ep caps
     DispatcherCmd_GrantEndpointCap,  ///< grant cap
+    DispatcherCmd_RemoveEndpointCap,  ///< grant cap
 };
 
 /**

@@ -19,6 +19,7 @@
 #include <barrelfish/dispatch.h>
 #include <barrelfish_kpi/init.h>
 #include <barrelfish/debug.h>
+#include <vfs/vfs.h>
 //#include <barrelfish/sys_debug.h>
 //#include <barrelfish/syscall_arch.h>
 //#include <barrelfish_kpi/sys_debug.h>
@@ -107,6 +108,14 @@ static void bind_cb(void *st, errval_t err, struct xmplmsg_binding *b)
 
     struct event_closure txcont = MKCONT(send_ints_cb, b);
 
+    // dispatcher_handle_t handle = curdispatcher();
+    // struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
+    // cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum);
+
+    // vfs_init();
+
+    // cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum);
+
     debug_printf("send 1#\n");
     cycles_t cur_cycle = 0;
     //sys_debug_hardware_timer_read((uintptr_t *)&cur_cycle);
@@ -114,7 +123,7 @@ static void bind_cb(void *st, errval_t err, struct xmplmsg_binding *b)
     cur_cycle = rdtsc();
     //struct sysret sr = syscall2(SYSCALL_DEBUG, DEBUG_HARDWARE_TIMER_READ);
     //cur_cycle = sr.value;
-    debug_printf("sys time %ld", cur_cycle);
+    debug_printf("sys time %ld\n", cur_cycle);
 
     //err = xmplmsg_msg_ints__tx(b, txcont, 0x1, 0x10);
     err = xmplmsg_msg_ints__tx(b, txcont, (int)(cur_cycle>>32), (int)cur_cycle);
@@ -124,7 +133,7 @@ static void bind_cb(void *st, errval_t err, struct xmplmsg_binding *b)
 
       if (err_no(err) == FLOUNDER_ERR_TX_BUSY) {
             struct waitset *ws = get_default_waitset();
-	    txcont = MKCONT(send_ints_ready, b);
+	        txcont = MKCONT(send_ints_ready, b);
             err = b->register_send(b, ws, txcont);
             if (err_is_fail(err)) {
                 // note that only one continuation may be registered at a time
@@ -159,21 +168,21 @@ static void start_client(void)
 int main(int argc, char *argv[]) 
 {
     errval_t err;
-
+    vfs_init();
     // debug_my_cspace();
     start_client();
     dispatcher_handle_t handle = curdispatcher();
     struct capref dcb = get_dispatcher_generic(handle)->dcb_cap;
     int ep_num = cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum).value;
     debug_printf("Endpoint num: %d\n", ep_num);
-    // struct capability *cap = 0;
-    // int ep_cap = cap_invoke3(dcb, DispatcherCmd_GetAllEndpoints, 3, (uintptr_t)cap).value;
-    // debug_printf("Endpoint cap: %d\n", ep_cap);
-    // debug_printf("Endpoint cap: %x\n", cap);
-    debug_endpoints();
-    struct capref dst_capref = debug_get_endpoint(2);
-    struct capref ep_capref = debug_get_endpoint(7);
-    // debug_get_endpoint(2);
+    // // struct capability *cap = 0;
+    // // int ep_cap = cap_invoke3(dcb, DispatcherCmd_GetAllEndpoints, 3, (uintptr_t)cap).value;
+    // // debug_printf("Endpoint cap: %d\n", ep_cap);
+    // // debug_printf("Endpoint cap: %x\n", cap);
+    // debug_endpoints();
+    struct capref dst_capref = debug_get_endpoint(10);
+    struct capref ep_capref = debug_get_endpoint(9);
+    // // debug_get_endpoint(2);
     capaddr_t dst_capaddr = get_cap_addr(dst_capref);
     debug_printf("Dest ep cap addr: %d\n", dst_capaddr);
     capaddr_t ep_capaddr = get_cap_addr(ep_capref);
@@ -181,7 +190,38 @@ int main(int argc, char *argv[])
     err = cap_invoke3(dcb, DispatcherCmd_GrantEndpointCap, ep_capaddr, dst_capaddr).error;
 
     // err = cap_invoke3(dcb, DispatcherCmd_GetAllEndpoints, 3, (uintptr_t)cap).value;
+    struct capref remove_capref = debug_get_endpoint(2);
+    capaddr_t remove_capaddr = get_cap_addr(remove_capref);
+    int remove_caplevel = get_cap_level(remove_capref);
+    // capaddr_t remove_cnode_capaddr get_croot_addr(cap);
+    // struct capref croot = get_croot_capref(remove_capref);
+    // err = invoke_cnode_delete(croot, remove_capaddr, remove_caplevel);
+    // cap_invoke1(dcb, DispatcherCmd_GetEndpointsNum);
 
+    long remove_time_avg = 0;
+    long remove_num = 0;
+    for(int i=0;i< 1000;i++){
+        long start = rdtsc();
+        err = cap_invoke3(dcb, DispatcherCmd_RemoveEndpointCap, remove_capaddr, remove_caplevel).error;
+        long end = rdtsc();
+        remove_time_avg = (remove_time_avg*remove_num + (end-start))/(remove_num + 1);
+        remove_num++;
+    }
+    printf("remove benchmark consuming: %ld\n", remove_time_avg);
+
+    long grant_time_avg = 0;
+    long grant_num = 0;
+    for(int i=0;i< 1000;i++){
+        long start = rdtsc();
+        err = cap_invoke3(dcb, DispatcherCmd_GrantEndpointCap, ep_capaddr, dst_capaddr).error;
+        long end = rdtsc();
+        grant_time_avg = (grant_time_avg*grant_num + (end-start))/(grant_num + 1);
+        grant_num++;
+    }
+    printf("grant benchmark consuming: %ld\n", grant_time_avg);
+    // err = cap_invoke4(dcb, DispatcherCmd_RemoveEndpointCap, remove_capaddr, remove_caplevel, remove_cnode_capaddr).error;
+
+    // start_client();
 
     // err = cap_invoke2(ep_capref, 9853, dst_capaddr).error;
     // err = invoke_dispatcher_dump_capabilities(dcb);
